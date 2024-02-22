@@ -4,7 +4,6 @@ package.json.*
 README.md.*
 *.ts.*
 docker/*
-dist/*
 dockerfile.*
 jest.*
 tsconfig.json

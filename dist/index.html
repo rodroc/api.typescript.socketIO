@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Demo API using Typescript, Sequelize & Socket.IO</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background-color: black;
+    }
+      #form { background: rgba(19, 1, 1, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+    </style>
+  </head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>   
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+(function($){
+
+var appName='demo';
+var userId="5001";
+var userSocketId='';
+var topic="jobs";
+
+var notify=function(sckData){
+  
+  if (location.protocol == 'https:'){
+
+    Notification.requestPermission().then(function(permission) { 
+        if (permission === 'granted') {
+            var options = {
+                title: sckData.title,
+                body: sckData.message,
+                icon: ''
+            };
+        } 
+    });
+
+  }
+
+};
+
+if(typeof(io)!=='undefined'){
+
+  function hookSocketSingle(socket) {
+      var origOn = socket.on;
+      socket.on = function(eventName, listener) {
+          // allow the event handler to be registered only if one doesn't already exist
+          if (this.listenerCount(eventName) === 0) {
+              return origOn.call(this, eventName, listener);
+          } else {
+              return this;
+          }
+      }
+  }
+
+  console.log('connecting to socket.io...');
+  socket = io("localhost:3000");
+
+  //http://adilapapaya.com/docs/socket.io-client/
+  socket.on('connect',function(){
+    // console.log(`connected! Sending userId=${userId}`);
+    socket.emit('userId',{ userId: userId });
+  });
+
+  socket.on('disconnect',function(){
+    console.log('disconnected!');
+  });
+
+  socket.on('connect_error', function(err) {
+    // handle server error here
+    console.log('socket.io: Error connecting to server');
+  });
+
+  socket.on('socketId', function(sckData){
+    console.log(`assigned socketId: ${sckData.socketId}`);
+    userSocketId=sckData.socketId;
+  });
+
+  socket.on(`${topic}.${appName}`, function(sckData){
+    // console.log(sckData);
+    console.table(sckData);
+    // notify(sckData);
+  });
+
+  socket.on(`${topic}.${appName}.${userId}`, function(sckData){
+    console.log(sckData);
+    // notify(sckData);
+  });
+
+  hookSocketSingle(socket);
+
+}else{
+  console.log('Failed to load socket io.');
+}
+
+})(jQuery);
+</script>
+</html>
