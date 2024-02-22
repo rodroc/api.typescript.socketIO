@@ -1,0 +1,12 @@
+node_modules/*
+package-lock.json
+package.json.*
+README.md.*
+*.ts.*
+docker/*
+dist/*
+dockerfile.*
+jest.*
+tsconfig.json
+tsconfig.json.*
+project.txt
